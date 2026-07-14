@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Offline Outdoor Assistant</title>
+    <style>
+      :root {
+        --bg: #f4f6f1;
+        --panel: #ffffff;
+        --panel-2: #eef3ed;
+        --ink: #17201b;
+        --muted: #667268;
+        --line: #d7dfd5;
+        --green: #2f6f4f;
+        --green-dark: #244f3c;
+        --orange: #b8612b;
+        --blue: #3e6472;
+        --danger: #9f3f35;
+        --shadow: 0 18px 45px rgba(23, 32, 27, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        color: var(--ink);
+        background:
+          linear-gradient(90deg, rgba(47, 111, 79, 0.05) 1px, transparent 1px),
+          linear-gradient(rgba(62, 100, 114, 0.045) 1px, transparent 1px),
+          var(--bg);
+        background-size: 28px 28px;
+      }
+
+      button,
+      textarea {
+        font: inherit;
+      }
+
+      button {
+        border: 0;
+        cursor: pointer;
+      }
+
+      .app {
+        min-height: 100%;
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+
+      .topbar {
+        min-height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 12px 18px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(12px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .mark {
+        width: 36px;
+        height: 36px;
+        flex: 0 0 auto;
+        border-radius: 8px;
+        background:
+          linear-gradient(
+            135deg,
+            rgba(47, 111, 79, 0.95),
+            rgba(62, 100, 114, 0.95)
+          ),
+          var(--green);
+        display: grid;
+        place-items: center;
+        box-shadow: 0 8px 18px rgba(47, 111, 79, 0.22);
+      }
+
+      .mark svg {
+        width: 22px;
+        height: 22px;
+        color: #fff;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.2;
+        font-weight: 750;
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: max-content;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--green);
+        box-shadow: 0 0 0 4px rgba(47, 111, 79, 0.14);
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(220px, 280px) minmax(0, 1fr) minmax(
+            260px,
+            340px
+          );
+        min-height: 0;
+        max-height: calc(100vh - 64px);
+      }
+
+      .sidebar,
+      .sources {
+        min-height: 0;
+        padding: 18px;
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .sidebar {
+        border-right: 1px solid var(--line);
+      }
+
+      .sources {
+        border-left: 1px solid var(--line);
+        overflow: auto;
+      }
+
+      .side-section + .side-section {
+        margin-top: 24px;
+      }
+
+      .side-title {
+        margin: 0 0 10px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      .choice-grid {
+        display: grid;
+        gap: 8px;
+      }
+
+      .choice {
+        width: 100%;
+        min-height: 38px;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        color: var(--ink);
+        text-align: left;
+        font-size: 14px;
+      }
+
+      .choice[aria-pressed="true"] {
+        border-color: rgba(47, 111, 79, 0.45);
+        background: #e8f1e7;
+        color: var(--green-dark);
+        font-weight: 700;
+      }
+
+      .main {
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: 1fr auto;
+        background: rgba(244, 246, 241, 0.7);
+      }
+
+      .thread {
+        min-height: 0;
+        overflow: auto;
+        padding: 26px clamp(16px, 3vw, 34px);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .empty {
+        margin: auto;
+        width: min(680px, 100%);
+        display: grid;
+        gap: 18px;
+        align-content: center;
+      }
+
+      .map-panel {
+        min-height: 160px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        background:
+          radial-gradient(
+            circle at 18% 28%,
+            rgba(184, 97, 43, 0.16) 0 2px,
+            transparent 3px
+          ),
+          radial-gradient(
+            circle at 72% 40%,
+            rgba(47, 111, 79, 0.18) 0 2px,
+            transparent 3px
+          ),
+          repeating-linear-gradient(
+            145deg,
+            rgba(47, 111, 79, 0.18) 0 1px,
+            transparent 1px 18px
+          ),
+          #eef3ed;
+        position: relative;
+        box-shadow: var(--shadow);
+      }
+
+      .map-panel::before,
+      .map-panel::after {
+        content: "";
+        position: absolute;
+        inset: 24px 28px;
+        border: 2px solid rgba(62, 100, 114, 0.25);
+        border-left-color: transparent;
+        border-bottom-color: transparent;
+        border-radius: 42% 58% 45% 55%;
+        transform: rotate(-8deg);
+      }
+
+      .map-panel::after {
+        inset: 54px 80px 32px 52px;
+        border-color: rgba(184, 97, 43, 0.26);
+        border-right-color: transparent;
+        transform: rotate(12deg);
+      }
+
+      .starter-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .starter {
+        min-height: 58px;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--ink);
+        text-align: left;
+        line-height: 1.35;
+        box-shadow: 0 8px 22px rgba(23, 32, 27, 0.06);
+      }
+
+      .starter:hover,
+      .choice:hover {
+        border-color: rgba(47, 111, 79, 0.5);
+      }
+
+      .message {
+        width: min(780px, 100%);
+        display: grid;
+        gap: 7px;
+      }
+
+      .message.user {
+        align-self: flex-end;
+        justify-items: end;
+      }
+
+      .message.assistant {
+        align-self: flex-start;
+      }
+
+      .message-label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .bubble {
+        padding: 13px 15px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        line-height: 1.55;
+        box-shadow: 0 8px 24px rgba(23, 32, 27, 0.07);
+        overflow-wrap: anywhere;
+      }
+
+      .user .bubble {
+        color: #fff;
+        border-color: transparent;
+        background: var(--green-dark);
+      }
+
+      .bubble p {
+        margin: 0 0 10px;
+      }
+
+      .bubble p:last-child,
+      .bubble ul:last-child,
+      .bubble ol:last-child {
+        margin-bottom: 0;
+      }
+
+      .bubble ul,
+      .bubble ol {
+        margin: 0 0 10px;
+        padding-left: 22px;
+      }
+
+      .composer {
+        border-top: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.9);
+        padding: 14px clamp(14px, 3vw, 28px);
+      }
+
+      .composer-inner {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: end;
+        max-width: 980px;
+        margin: 0 auto;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 52px;
+        max-height: 180px;
+        resize: vertical;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 13px 14px;
+        color: var(--ink);
+        background: var(--panel);
+        outline: none;
+        line-height: 1.45;
+      }
+
+      textarea:focus {
+        border-color: rgba(47, 111, 79, 0.65);
+        box-shadow: 0 0 0 4px rgba(47, 111, 79, 0.12);
+      }
+
+      .send {
+        width: 52px;
+        height: 52px;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        background: var(--green);
+        box-shadow: 0 10px 24px rgba(47, 111, 79, 0.26);
+      }
+
+      .send:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+        box-shadow: none;
+      }
+
+      .send svg {
+        width: 22px;
+        height: 22px;
+      }
+
+      .source-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .source-item {
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+      }
+
+      .source-title {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.35;
+        font-weight: 750;
+      }
+
+      .source-meta {
+        margin-top: 6px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .tag {
+        max-width: 100%;
+        padding: 3px 7px;
+        border-radius: 999px;
+        color: var(--muted);
+        background: var(--panel-2);
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+
+      .source-preview {
+        margin: 9px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .source-link {
+        display: inline-block;
+        margin-top: 9px;
+        color: var(--blue);
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .notice {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .error .bubble {
+        border-color: rgba(159, 63, 53, 0.35);
+        background: #fff4f1;
+        color: var(--danger);
+      }
+
+      @media (max-width: 960px) {
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar,
+        .sources {
+          border: 0;
+        }
+
+        .sidebar {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 14px;
+          padding: 12px 14px;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .side-section + .side-section {
+          margin-top: 0;
+        }
+
+        .choice-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .sources {
+          max-height: 260px;
+          border-top: 1px solid var(--line);
+        }
+      }
+
+      @media (max-width: 640px) {
+        .topbar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .status {
+          min-width: 0;
+        }
+
+        .sidebar {
+          grid-template-columns: 1fr;
+        }
+
+        .starter-grid,
+        .choice-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .thread {
+          padding: 16px 12px;
+        }
+
+        .composer-inner {
+          grid-template-columns: 1fr;
+        }
+
+        .send {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="mark" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="m3 19 6-10 4 6 2-3 6 7"></path>
+              <path d="M9 9h.01"></path>
+            </svg>
+          </div>
+          <h1>Offline Outdoor Assistant</h1>
+        </div>
+        <div class="status" aria-live="polite">
+          <span class="dot" aria-hidden="true"></span>
+          <span id="statusText">Ready</span>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <aside class="sidebar" aria-label="Query controls">
+          <section class="side-section">
+            <h2 class="side-title">Topic</h2>
+            <div class="choice-grid" id="topicChoices">
+              <button
+                class="choice"
+                type="button"
+                data-topic=""
+                aria-pressed="true"
+              >
+                All
+              </button>
+              <button
+                class="choice"
+                type="button"
+                data-topic="camping"
+                aria-pressed="false"
+              >
+                Camping
+              </button>
+              <button
+                class="choice"
+                type="button"
+                data-topic="water"
+                aria-pressed="false"
+              >
+                Water
+              </button>
+              <button
+                class="choice"
+                type="button"
+                data-topic="weather"
+                aria-pressed="false"
+              >
+                Weather
+              </button>
+              <button
+                class="choice"
+                type="button"
+                data-topic="wildlife"
+                aria-pressed="false"
+              >
+                Wildlife
+              </button>
+              <button
+                class="choice"
+                type="button"
+                data-topic="emergencies"
+                aria-pressed="false"
+              >
+                Emergencies
+              </button>
+            </div>
+          </section>
+        </aside>
+
+        <main class="main">
+          <section class="thread" id="thread" aria-live="polite">
+            <div class="empty" id="emptyState">
+              <div class="map-panel" aria-hidden="true"></div>
+              <div class="starter-grid">
+                <button class="starter" type="button">
+                  How far should my tent be from a campfire?
+                </button>
+                <button class="starter" type="button">
+                  What should I do if I get lost while hiking?
+                </button>
+                <button class="starter" type="button">
+                  How do I treat water while camping?
+                </button>
+                <button class="starter" type="button">
+                  What are warning signs of hypothermia?
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <form class="composer" id="chatForm">
+            <div class="composer-inner">
+              <textarea
+                id="queryInput"
+                name="query"
+                rows="2"
+                placeholder="Ask a question"
+                autocomplete="off"
+              ></textarea>
+              <button
+                class="send"
+                id="sendButton"
+                type="submit"
+                aria-label="Send"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m22 2-7 20-4-9-9-4Z"></path>
+                  <path d="M22 2 11 13"></path>
+                </svg>
+              </button>
+            </div>
+          </form>
+        </main>
+
+        <aside class="sources" aria-label="Retrieved sources">
+          <section>
+            <h2 class="side-title">Retrieved Sources</h2>
+            <div class="source-list" id="sourceList">
+              <p class="notice">No sources yet.</p>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById("chatForm");
+      const input = document.getElementById("queryInput");
+      const thread = document.getElementById("thread");
+      const emptyState = document.getElementById("emptyState");
+      const sourceList = document.getElementById("sourceList");
+      const sendButton = document.getElementById("sendButton");
+      const statusText = document.getElementById("statusText");
+      const chatHistory = [];
+
+      let selectedTopic = "";
+      let busy = false;
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function renderMarkdown(value) {
+        const escaped = escapeHtml(value || "");
+        const lines = escaped.split(/\n/);
+        const blocks = [];
+        let list = [];
+
+        function flushList() {
+          if (!list.length) return;
+          blocks.push(
+            "<ul>" +
+              list.map((item) => `<li>${formatInline(item)}</li>`).join("") +
+              "</ul>",
+          );
+          list = [];
+        }
+
+        function formatInline(text) {
+          return text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+        }
+
+        for (const line of lines) {
+          const bullet = line.match(/^\s*[-*]\s+(.+)$/);
+          if (bullet) {
+            list.push(bullet[1]);
+            continue;
+          }
+
+          flushList();
+          if (line.trim()) {
+            blocks.push(`<p>${formatInline(line)}</p>`);
+          }
+        }
+
+        flushList();
+        return blocks.join("");
+      }
+
+      function setBusy(nextBusy) {
+        busy = nextBusy;
+        sendButton.disabled = nextBusy;
+        input.disabled = nextBusy;
+        statusText.textContent = nextBusy ? "Thinking" : "Ready";
+      }
+
+      function appendMessage(role, text, options = {}) {
+        emptyState?.remove();
+
+        const item = document.createElement("article");
+        item.className = `message ${role}${options.error ? " error" : ""}`;
+
+        const label = document.createElement("div");
+        label.className = "message-label";
+        label.textContent = role === "user" ? "You" : "Assistant";
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        bubble.innerHTML =
+          role === "assistant" ? renderMarkdown(text) : escapeHtml(text);
+
+        item.append(label, bubble);
+        thread.appendChild(item);
+        thread.scrollTop = thread.scrollHeight;
+      }
+
+      function updatePressed(container, button) {
+        container.querySelectorAll(".choice").forEach((item) => {
+          item.setAttribute("aria-pressed", String(item === button));
+        });
+      }
+
+      function sourceName(source) {
+        return source.title || source.filename || "Untitled source";
+      }
+
+      function sourceTags(source) {
+        return [
+          source.category,
+          source.publisher,
+          source.source_type,
+          source.source_updated_at ? `Updated ${source.source_updated_at}` : "",
+        ].filter(Boolean);
+      }
+
+      function dedupeSources(sources) {
+        const seen = new Set();
+        const unique = [];
+        for (const source of sources) {
+          const key =
+            source.source_url || source.filename || sourceName(source);
+          if (seen.has(key)) continue;
+          seen.add(key);
+          unique.push(source);
+        }
+        return unique;
+      }
+
+      function renderSources(sources) {
+        sourceList.innerHTML = "";
+
+        const uniqueSources = dedupeSources(sources || []);
+
+        if (!uniqueSources.length) {
+          const empty = document.createElement("p");
+          empty.className = "notice";
+          empty.textContent = "No sources returned.";
+          sourceList.appendChild(empty);
+          return;
+        }
+
+        for (const source of uniqueSources) {
+          const item = document.createElement("article");
+          item.className = "source-item";
+
+          const title = document.createElement("h3");
+          title.className = "source-title";
+          title.textContent = sourceName(source);
+          item.appendChild(title);
+
+          const tags = sourceTags(source);
+          if (tags.length) {
+            const meta = document.createElement("div");
+            meta.className = "source-meta";
+            for (const tagText of tags) {
+              const tag = document.createElement("span");
+              tag.className = "tag";
+              tag.textContent = tagText;
+              meta.appendChild(tag);
+            }
+            item.appendChild(meta);
+          }
+
+          if (source.preview) {
+            const preview = document.createElement("p");
+            preview.className = "source-preview";
+            preview.textContent = source.preview;
+            item.appendChild(preview);
+          }
+
+          if (source.source_url) {
+            const link = document.createElement("a");
+            link.className = "source-link";
+            link.href = source.source_url;
+            link.target = "_blank";
+            link.rel = "noreferrer";
+            link.textContent = "Open source";
+            item.appendChild(link);
+          }
+
+          sourceList.appendChild(item);
+        }
+      }
+
+      async function submitQuery(rawQuery) {
+        const query = rawQuery.trim();
+        if (!query || busy) return;
+
+        appendMessage("user", query);
+        input.value = "";
+        setBusy(true);
+
+        try {
+          // 질문(query)과 토픽(category)만 보낸다. 검색용/프롬프트용 텍스트
+          // 파생은 서버가 query 폴백으로 처리하고, 토픽 필터링은 category가
+          // 담당한다.
+          const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              query,
+              category: selectedTopic,
+              history: chatHistory,
+            }),
+          });
+
+          const payload = await response.json().catch(() => ({}));
+
+          if (!response.ok) {
+            throw new Error(
+              payload.detail || `Request failed with ${response.status}`,
+            );
+          }
+
+          const answer = payload.answer || "";
+          appendMessage("assistant", answer || "No answer returned.");
+          renderSources(payload.sources || []);
+
+          chatHistory.push({ q: query, a: answer });
+          if (chatHistory.length > 6) chatHistory.shift();
+        } catch (error) {
+          appendMessage("assistant", error.message || "Request failed.", {
+            error: true,
+          });
+        } finally {
+          setBusy(false);
+          input.focus();
+        }
+      }
+
+      document
+        .getElementById("topicChoices")
+        .addEventListener("click", (event) => {
+          const button = event.target.closest(".choice");
+          if (!button) return;
+          selectedTopic = button.dataset.topic || "";
+          updatePressed(event.currentTarget, button);
+        });
+
+      document.querySelectorAll(".starter").forEach((button) => {
+        button.addEventListener("click", () =>
+          submitQuery(button.textContent || ""),
+        );
+      });
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        submitQuery(input.value);
+      });
+
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          form.requestSubmit();
+        }
+      });
+    </script>
+  </body>
+</html>
