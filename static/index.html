@@ -457,6 +457,43 @@
         color: var(--danger);
       }
 
+      .typing {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 0;
+      }
+
+      .typing span {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--green);
+        opacity: 0.35;
+        animation: typing-bounce 1.2s infinite ease-in-out;
+      }
+
+      .typing span:nth-child(2) {
+        animation-delay: 0.18s;
+      }
+
+      .typing span:nth-child(3) {
+        animation-delay: 0.36s;
+      }
+
+      @keyframes typing-bounce {
+        0%,
+        60%,
+        100% {
+          opacity: 0.35;
+          transform: translateY(0);
+        }
+        30% {
+          opacity: 1;
+          transform: translateY(-4px);
+        }
+      }
+
       @media (max-width: 960px) {
         .workspace {
           grid-template-columns: 1fr;
@@ -752,6 +789,31 @@
         item.append(label, bubble);
         thread.appendChild(item);
         thread.scrollTop = thread.scrollHeight;
+        return item;
+      }
+
+      // A placeholder assistant bubble with an animated typing indicator,
+      // shown while the request is in flight. Returned so the caller can
+      // fill it with the answer or remove it on error.
+      function appendPending() {
+        emptyState?.remove();
+
+        const item = document.createElement("article");
+        item.className = "message assistant pending";
+
+        const label = document.createElement("div");
+        label.className = "message-label";
+        label.textContent = "Assistant";
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        bubble.innerHTML =
+          '<span class="typing"><span></span><span></span><span></span></span>';
+
+        item.append(label, bubble);
+        thread.appendChild(item);
+        thread.scrollTop = thread.scrollHeight;
+        return item;
       }
 
       function updatePressed(container, button) {
@@ -849,6 +911,7 @@
         appendMessage("user", query);
         input.value = "";
         setBusy(true);
+        const pending = appendPending();
 
         try {
           // 질문(query)과 토픽(category)만 보낸다. 검색용/프롬프트용 텍스트
@@ -873,12 +936,14 @@
           }
 
           const answer = payload.answer || "";
+          pending.remove();
           appendMessage("assistant", answer || "No answer returned.");
           renderSources(payload.sources || []);
 
           chatHistory.push({ q: query, a: answer });
           if (chatHistory.length > 6) chatHistory.shift();
         } catch (error) {
+          pending.remove();
           appendMessage("assistant", error.message || "Request failed.", {
             error: true,
           });
