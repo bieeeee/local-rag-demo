@@ -1,3 +1,4 @@
 rag-env/
 chroma_db/
 __pycache__/
+raw/

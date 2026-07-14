@@ -1,0 +1,90 @@
+sources:
+  - name: cdc
+    publisher: Centers for Disease Control and Prevention
+    reuse_basis_url: https://www.cdc.gov/other/agencymaterials.html
+
+    pages:
+      - url: https://www.cdc.gov/winter-weather/prevention/index.html
+        output: weather/hypothermia.md
+        category: weather
+        title: Preventing Hypothermia
+
+      - url: https://www.cdc.gov/winter-weather/prevention/preventing-frostbite.html
+        output: weather/frostbite.md
+        category: weather
+
+      - url: https://www.cdc.gov/heat-health/risk-factors/heat-and-athletes.html
+        output: weather/extreme-heat-during-physical-activity.md
+        category: weather
+
+      - url: https://www.cdc.gov/drinking-water/prevention/water-treatment-hiking-camping-traveling.html
+        output: water/treating-water-while-hiking-and-camping.md
+        category: water
+
+      - url: https://www.cdc.gov/water-emergency/about/index.html
+        output: water/making-water-safe-in-an-emergency.md
+        category: water
+
+      - url: https://www.cdc.gov/water-emergency/about/how-to-create-and-store-an-emergency-water-supply.html
+        output: water/emergency-water-supply.md
+        category: water
+
+      - url: https://www.cdc.gov/ticks/after-a-tick-bite/index.html
+        output: ticks/emergency-water-supply.md
+        category: water
+
+  - name: nps
+    publisher: National Park Service
+
+    pages:
+      - url: https://www.nps.gov/articles/10essentials.htm
+        output: preparation/ten-essentials.md
+        category: preparation
+
+      - url: https://www.nps.gov/articles/hiking-safety.htm
+        output: preparation/hike-smart.md
+        category: preparation
+
+      - url: https://www.nps.gov/articles/gtgemergencyplan.htm
+        output: emergencies/becoming-lost.md
+        category: emergencies
+
+      - url: https://www.nps.gov/articles/lightning-safety.htm
+        output: weather/lightning-safety.md
+        category: weather
+
+      - url: https://www.nps.gov/subjects/bears/safety.htm
+        output: wildlife/bear-safety.md
+        category: wildlife
+
+      - url: https://www.nps.gov/articles/hiking-in-bear-country.htm
+        output: wildlife/hiking-in-bear-country.md
+        category: wildlife
+
+      - url: https://www.nps.gov/subjects/bears/storingfood.htm
+        output: wildlife/storingfood.md
+        category: wildlife
+
+      - url: https://www.nps.gov/articles/camp-safety-during-your-stay.htm
+        output: camping/camp-safety-during-your-stay.md
+        category: camping
+
+      - url: https://www.nps.gov/subjects/camping/finding-and-setting-up-a-campsite.htm
+        output: camping/finding-and-setting-up-a-campsite.md
+        category: camping
+
+      - url: https://www.nps.gov/articles/campfires.htm
+        output: camping/campfires.md
+        category: camping
+
+      - url: https://www.nps.gov/subjects/camping/camping-with-pets.htm
+        output: camping/camping-with-pets.md
+        category: camping
+
+      - url: https://www.nps.gov/articles/propane-safety-for-campers.htm
+        output: camping/propane-safety-for-campers.md
+        category: camping
+
+      - url: https://www.nps.gov/articles/2wayspurifywater.htm
+        output: water/2wayspurifywater.md
+        category: water
