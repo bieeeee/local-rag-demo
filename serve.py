@@ -25,6 +25,27 @@ HOST = "127.0.0.1"
 PORT = 8000
 
 
+def load_dotenv(path: Path) -> None:
+    """Load KEY=VALUE lines from a .env file into os.environ (local dev only).
+
+    ]Only sets variables that aren't already
+    in the environment, so an explicitly exported value still wins. Secrets like
+    GEMINI_API_KEY live here and are read by the server process, never sent
+    to the browser.
+    """
+    if not path.exists():
+        return
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
 def venv_python(venv_dir: Path) -> Path:
     if os.name == "nt":
         return venv_dir / "Scripts" / "python.exe"
@@ -70,6 +91,10 @@ def main() -> int:
 
     os.chdir(PROJECT_ROOT)
     sys.path.insert(0, str(PROJECT_ROOT / "src"))
+
+    # Load local .env (LLM_BACKEND, GEMINI_API_KEY, ...) before the server
+    # imports the app, so its module-level config picks the values up.
+    load_dotenv(PROJECT_ROOT / ".env")
 
     threading.Thread(target=open_browser_when_ready, daemon=True).start()
 

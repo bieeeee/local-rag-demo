@@ -3,3 +3,5 @@ chroma_db/
 __pycache__/
 raw/
 .venv/
+.env
+.DS_Store
