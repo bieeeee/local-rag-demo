@@ -129,7 +129,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--manifest",
         type=Path,
-        default=Path("docs/source-manifest.yaml"),
+        default=Path("docs/nps-source-manifest.yaml"),
         help="Generated source manifest path",
     )
     parser.add_argument(
